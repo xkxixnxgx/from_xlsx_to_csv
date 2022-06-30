@@ -1,55 +1,65 @@
-import xlsxwriter
+from os import listdir, system
+from os.path import isfile, join, abspath, dirname
+import pandas as pd
+import csv
 
+# format csv
+'''
+"word1";"перевод1"
+"word2";"transcription2";"перевод2"
+"word3";"перевод3";"example1";"пример1"
+"word4";"transcription4";"перевод4";"example1";"пример1";"example2";"пример2"
+'''
 
-# def as_xlsx(self):
-#     output = BytesIO()
-#     workbook = xlsxwriter.Workbook(output)
-#     worksheet = workbook.add_worksheet()
-#     cell_format = workbook.add_format()
-#     cell_format.set_text_wrap('\n')
-
-#     for i, node in enumerate(self.data):
-#         worksheet.write(i, 0, node.answer.id)
-#         worksheet.write(i, 1, node.answer.text)
-#         worksheet.write(i, 2, '\n'.join([q.text for q in node.questions]), cell_format)
-#         worksheet.write(i, 3, '\n'.join(node.answer.tags), cell_format)
-#         if not node.answer.comment:
-#             worksheet.write(i, 4, ' ')
-#         else:
-#             worksheet.write(i, 4, node.answer.comment)
-
-#     workbook.close()
-#     return output.getvalue()
-
-
-# def from_xlsx(self, file_obj):
-#     df = pd.read_excel(file_obj, index_col=None, header=None)
-#     df = df.replace(np.nan, '', regex=True)
-
-#     nodes = []
-#     for i, row in df.iterrows():
-#         answer_map = AnswerMapper(
-#             id=row[0],
-#             text=row[1],
-#             comment=row[4] if len(row) > 3 else None,
-#             tags=row[3].split('\n') if len(row) > 2 else None
-#         )
-#         questions_map = [
-#             QuestionMapper(text=q)
-#             for q in row[2].split('\n')
-#         ]
-#         nodes.append(FAQNodeMapper(answer=answer_map, questions=questions_map))
-#     return FAQMapper(data=nodes)
+BASE_DIR = abspath(join(dirname(__file__)))
+DATA_DIR = BASE_DIR + '/data/'
 
 
 
-PATH_FILE_XLSX = '~/dict'
-PATH_FILE_CSV = '~/dict'
+PATH_FILE_XLSX = DATA_DIR + 'irregular_verbs.xlsx'
+PATH_FILE_CSV = DATA_DIR + 'result.csv'
 
 
-def decode():
-    print('start')
+def decode(file_input, file_output):
+    df = pd.read_excel(
+        file_input,
+        header=None,
+        index_col=None,
+        names=['get', 'infinitive', 'past_simple', 'past_participle', 'translation'],
+        )
+    df_selected_only = df[df['get'] == '+'].filter(items=['infinitive', 'past_simple', 'past_participle', 'translation'])
+    df_result = pd.DataFrame(columns=['word', 'перевод', 'verb_form', 'форма глагола'])
+    
+    for row in df_selected_only.itertuples(index=False):
+        data_for_upd = {
+            'word': [row.infinitive, row.past_simple, row.past_participle],
+            'перевод': [row.translation, row.translation, row.translation],
+            'verb_form': ['Infinitive', 'Past Simple', 'Past Participle'],
+            'форма глагола': ['Инфинитив', 'Прошедшее время', 'Страдательное причастие']
+        }
+        df_update = pd.DataFrame(data_for_upd, )
+        df_result = pd.concat([df_result, df_update])
+    pd.set_option('display.max_rows', None)
+    df_result_clean = df_result.replace(to_replace=r'\n', value=', ', regex=True)
+    print(df_result_clean)
+    df_result_clean.to_csv(file_output,
+        sep=";",
+        index=False,
+        header=False,
+        encoding='utf-8',
+        line_terminator = '\r',
+    )
+
+
+
+def main():
+    all_files = [f for f in listdir(DATA_DIR) if isfile(join(DATA_DIR, f))]
+    xlsx_files = list(filter(lambda x: ".xlsx" in x, all_files))
+    for filename in xlsx_files:
+        PATH_FILE_XLSX = DATA_DIR + filename
+        PATH_FILE_CSV = DATA_DIR + '.'.join([filename.split(".")[0], 'csv'])
+        decode(PATH_FILE_XLSX, PATH_FILE_CSV)
 
 
 if __name__ == '__main__':
-    decode()
+    main()
