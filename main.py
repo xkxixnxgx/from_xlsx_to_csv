@@ -32,8 +32,8 @@ def decode(file_input, file_output):
     
     for row in df_selected_only.itertuples(index=False):
         data_for_upd = {
-            'word': [row.infinitive, row.past_simple, row.past_participle],
-            'перевод': [row.translation, row.translation, row.translation],
+            'word': [f'{row.infinitive} - Inf.', f'{row.past_simple} - P.S.', f'{row.past_participle} - P.P.'],
+            'перевод': [f'{row.translation} - Инф.', f'{row.translation} - Пр.вр.', f'{row.translation} - Стр.прич.'],
             'verb_form': ['Infinitive', 'Past Simple', 'Past Participle'],
             'форма глагола': ['Инфинитив', 'Прошедшее время', 'Страдательное причастие']
         }
